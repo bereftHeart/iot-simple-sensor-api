@@ -1,14 +1,44 @@
-# Welcome to your CDK TypeScript project
+# Welcome to AWS CDK Typescript project
 
-This is a blank project for CDK development with TypeScript.
+This is a simple AWS serverless CRUD API using nodejs.
 
-The `cdk.json` file tells the CDK Toolkit how to execute your app.
+## Prerequisite
 
-## Useful commands
+Already have an AWS account, install AWS CLI, AWS CDK CLI and configure AWS CLI. If not, following this instruction:
+<https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html>
 
-* `npm run build`   compile typescript to js
-* `npm run watch`   watch for changes and compile
-* `npm run test`    perform the jest unit tests
-* `npx cdk deploy`  deploy this stack to your default AWS account/region
-* `npx cdk diff`    compare deployed stack with current state
-* `npx cdk synth`   emits the synthesized CloudFormation template
+## How to deploy
+
+Clone the project
+
+```sh
+git clone https://github.com/bereftHeart/iot-simple-sensor-api.git
+```
+
+Install dependencies
+
+```sh
+npm i
+```
+
+Bootstrap your CDK
+
+```sh
+cdk bootstrap
+```
+
+Deploy on your stack
+
+```sh
+cdk deploy
+```
+
+Useful command
+
+```sh
+npm run build
+npm run watch
+npm run test
+npm run deploy
+npm run destroy
+```

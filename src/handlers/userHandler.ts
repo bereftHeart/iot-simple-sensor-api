@@ -1,19 +1,25 @@
 import { DynamoDB, ScanCommand } from "@aws-sdk/client-dynamodb";
-import { DeleteCommand, GetCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
+import {
+  DeleteCommand,
+  GetCommand,
+  PutCommand,
+  UpdateCommand,
+} from "@aws-sdk/lib-dynamodb";
+import { unmarshall } from "@aws-sdk/util-dynamodb";
 import * as bcrypt from "bcryptjs";
 import { randomUUID } from "crypto";
 import { response } from "../utils/response";
 import { isValidEmail } from "../utils/validate";
 
 interface UserInput {
-  name: string;
+  username: string;
   email: string;
   password: string;
 }
 
 interface UserOutput {
   id: string;
-  name: string;
+  username: string;
   email: string;
 }
 
@@ -39,8 +45,8 @@ export const createUser = async (body: string | null) => {
   const user = parseRequestBody(body);
   if (!user) return response(400, "Invalid or missing body");
 
-  const { name, email, password } = user;
-  if (!name || !email || !password) {
+  const { username, email, password } = user;
+  if (!username || !email || !password) {
     return response(400, "Missing required fields");
   }
 
@@ -52,7 +58,7 @@ export const createUser = async (body: string | null) => {
     TableName: TABLE_NAME,
     Item: {
       id: randomUUID(),
-      name,
+      username,
       email,
       password: bcrypt.hashSync(password, 10),
     },
@@ -75,6 +81,7 @@ export const getUsers = async (id?: string) => {
     const getCommand = new GetCommand({
       TableName: TABLE_NAME,
       Key: { id },
+      AttributesToGet: ["id", "username", "email"],
     });
 
     try {
@@ -87,11 +94,14 @@ export const getUsers = async (id?: string) => {
     }
   }
 
-  const scanCommand = new ScanCommand({ TableName: TABLE_NAME });
+  const scanCommand = new ScanCommand({
+    TableName: TABLE_NAME,
+    AttributesToGet: ["id", "username", "email"],
+  });
 
   try {
-    const result = await dynamodb.send(scanCommand);
-    return response(200, result.Items as unknown as UserOutput[]);
+    const { Items } = await dynamodb.send(scanCommand);
+    return response(200, Items ? Items.map((item) => unmarshall(item)) : []);
   } catch (error) {
     console.error("Error getting users:", error);
     return response(500, "Error getting users");
@@ -110,15 +120,39 @@ export const updateUser = async (
   const user = parseRequestBody(body);
   if (!user) return response(400, "Invalid or missing body");
 
-  const { name, email, password } = user;
-  const putCommand = new PutCommand({
+  const { username, email, password } = user;
+
+  if (email && !isValidEmail(email)) {
+    return response(400, "Invalid email");
+  }
+
+  let updateExpression = "";
+  if (username) {
+    updateExpression += "SET username = :username";
+  }
+  if (email) {
+    updateExpression += ", email = :email";
+  }
+  if (password) {
+    updateExpression += ", password = :password";
+  }
+
+  const expressionAttributeValues: { [key: string]: any } = {};
+  if (username) {
+    expressionAttributeValues[":username"] = username;
+  }
+  if (email) {
+    expressionAttributeValues[":email"] = email;
+  }
+  if (password) {
+    expressionAttributeValues[":password"] = bcrypt.hashSync(password, 10);
+  }
+
+  const putCommand = new UpdateCommand({
     TableName: TABLE_NAME,
-    Item: {
-      id,
-      name,
-      email,
-      password: bcrypt.hashSync(password, 10),
-    },
+    Key: { id },
+    UpdateExpression: updateExpression,
+    ExpressionAttributeValues: expressionAttributeValues,
   });
 
   try {

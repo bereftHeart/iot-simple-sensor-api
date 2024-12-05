@@ -1,12 +1,19 @@
 import { DynamoDB, ScanCommand } from "@aws-sdk/client-dynamodb";
-import { DeleteCommand, GetCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
+import {
+  DeleteCommand,
+  GetCommand,
+  PutCommand,
+  UpdateCommand,
+} from "@aws-sdk/lib-dynamodb";
+import { unmarshall } from "@aws-sdk/util-dynamodb";
 import { randomUUID } from "crypto";
+import { excludeSensitiveFields } from "../utils/common";
 import { response } from "../utils/response";
 
 interface SensorData {
   id: string;
-  temperature: number;
-  humidity: number;
+  sensorName: string;
+  sensorValue: number;
   receiveAt?: string;
 }
 
@@ -32,8 +39,8 @@ export const createSensorData = async (body: string | null) => {
   const sensorData = parseRequestBody(body);
   if (!sensorData) return response(400, "Invalid or missing body");
 
-  const { temperature, humidity } = sensorData;
-  if (!temperature || !humidity) {
+  const { sensorName, sensorValue } = sensorData;
+  if (!sensorName || !sensorValue) {
     return response(400, "Missing required fields");
   }
 
@@ -41,8 +48,8 @@ export const createSensorData = async (body: string | null) => {
     TableName: TABLE_NAME,
     Item: {
       id: randomUUID(),
-      temperature,
-      humidity,
+      sensorName,
+      sensorValue,
       timestamp: Date.now(),
     },
   });
@@ -70,25 +77,26 @@ export const getSensorData = async (id?: string) => {
       const { Item } = await dynamodb.send(getCommand);
       if (!Item) return response(404, "Sensor data not found");
       return response(200, {
-        ...Item,
-        receiveAt: new Date(Item.timestamp.N).toISOString(),
+        ...excludeSensitiveFields(Item, ["timestamp"]),
+        receiveAt: new Date(Item.timestamp).toISOString() || null,
       } as SensorData);
     } catch (error) {
       console.log("Error getting sensor data:", error);
       return response(500, "Error getting sensor data");
     }
   }
-  const scanCommand = new ScanCommand({ TableName: TABLE_NAME });
 
+  const scanCommand = new ScanCommand({ TableName: TABLE_NAME });
   try {
     const { Items } = await dynamodb.send(scanCommand);
     if (!Items) return response(404, "No sensor data found");
+    const unmarshalledItems = Items?.map((item) => unmarshall(item));
     return response(
       200,
-      Items.map((item) => ({
-        ...item,
-        receiveAt: item.timestamp.N
-          ? new Date(item.timestamp.N).toISOString()
+      unmarshalledItems.map((item) => ({
+        ...excludeSensitiveFields(item, ["timestamp"]),
+        receiveAt: item.timestamp
+          ? new Date(item.timestamp).toISOString()
           : null,
       })) as SensorData[]
     );
@@ -111,16 +119,27 @@ export const updateSensorData = async (
   const sensorData = parseRequestBody(body);
   if (!sensorData) return response(400, "Invalid or missing body");
 
-  const { temperature, humidity } = sensorData;
+  const { sensorName, sensorValue } = sensorData;
+  let updateExpression = "";
+  if (sensorName) {
+    updateExpression += "SET sensorName = :sensorName";
+  }
+  if (sensorValue) {
+    updateExpression += ", sensorValue = :sensorValue";
+  }
+  const expressionAttributeValues: { [key: string]: any } = {};
+  if (sensorName) {
+    expressionAttributeValues[":sensorName"] = sensorName;
+  }
+  if (sensorValue) {
+    expressionAttributeValues[":sensorValue"] = sensorValue.toString();
+  }
 
-  const putCommand = new PutCommand({
+  const putCommand = new UpdateCommand({
     TableName: TABLE_NAME,
-    Item: {
-      id,
-      temperature,
-      humidity,
-      timestamp: Date.now(),
-    },
+    Key: { id },
+    UpdateExpression: updateExpression,
+    ExpressionAttributeValues: expressionAttributeValues,
   });
 
   try {
