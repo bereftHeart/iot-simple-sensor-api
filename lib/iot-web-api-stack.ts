@@ -1,16 +1,74 @@
-import * as cdk from 'aws-cdk-lib';
-import { Construct } from 'constructs';
-// import * as sqs from 'aws-cdk-lib/aws-sqs';
+import * as cdk from "aws-cdk-lib";
+import { Cors, LambdaIntegration, RestApi } from "aws-cdk-lib/aws-apigateway";
+import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
+import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
+import { Construct } from "constructs";
 
 export class IotWebApiStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    // The code that defines your stack goes here
+    const userTable = new dynamodb.Table(this, "UserTable", {
+      partitionKey: { name: "id", type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      tableName: "UserTable",
+    });
 
-    // example resource
-    // const queue = new sqs.Queue(this, 'IotWebApiQueue', {
-    //   visibilityTimeout: cdk.Duration.seconds(300)
-    // });
+    const sensorTable = new dynamodb.Table(this, "SensorTable", {
+      partitionKey: { name: "id", type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      tableName: "SensorTable",
+    });
+
+    const api = new RestApi(this, "RestAPI", {
+      restApiName: "RestAPI",
+      defaultCorsPreflightOptions: {
+        allowOrigins: Cors.ALL_ORIGINS,
+        allowMethods: Cors.ALL_METHODS,
+      },
+    });
+
+    const userLambda = new NodejsFunction(this, "UserLambda", {
+      entry: "src/functions/user.ts",
+      handler: "lambdaHandler",
+      environment: {
+        TABLE_NAME: userTable.tableName,
+      },
+    });
+
+    const sensorLambda = new NodejsFunction(this, "SensorLambda", {
+      entry: "src/functions/sensor.ts",
+      handler: "lambdaHandler",
+      environment: {
+        TABLE_NAME: sensorTable.tableName,
+      },
+    });
+
+    userTable.grantReadWriteData(userLambda);
+
+    const usersResource = api.root.addResource("users");
+    const userResource = usersResource.addResource("{id}");
+
+    const sensorsResource = api.root.addResource("sensor-data");
+    const sensorResource = sensorsResource.addResource("{id}");
+
+    const userIntegration = new LambdaIntegration(userLambda);
+    const sensorIntegration = new LambdaIntegration(sensorLambda);
+
+    usersResource.addMethod("GET", userIntegration);
+    usersResource.addMethod("POST", userIntegration);
+    userResource.addMethod("GET", userIntegration);
+    userResource.addMethod("PUT", userIntegration);
+    userResource.addMethod("DELETE", userIntegration);
+
+    sensorsResource.addMethod("GET", sensorIntegration);
+    sensorsResource.addMethod("POST", sensorIntegration);
+    sensorResource.addMethod("GET", sensorIntegration);
+    sensorResource.addMethod("PUT", sensorIntegration);
+    sensorResource.addMethod("DELETE", sensorIntegration);
+
+    new cdk.CfnOutput(this, "APIGatewayURL", {
+      value: api.url ?? "Something went wrong with the deployment",
+    });
   }
 }
