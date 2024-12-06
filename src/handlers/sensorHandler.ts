@@ -141,7 +141,7 @@ export const updateSensorData = async (
     expressionAttributeValues[":sensorName"] = sensorName;
   }
   if (sensorValue) {
-    expressionAttributeValues[":sensorValue"] = sensorValue.toString();
+    expressionAttributeValues[":sensorValue"] = sensorValue;
   }
 
   const putCommand = new UpdateCommand({
