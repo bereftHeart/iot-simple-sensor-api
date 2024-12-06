@@ -1,0 +1,225 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "2024-12-06T04:35:03Z",
+    "title": "RestAPI"
+  },
+  "host": "6up6i7wsrb.execute-api.ap-northeast-3.amazonaws.com",
+  "basePath": "/prod",
+  "schemes": ["https"],
+  "paths": {
+    "/sensor-data": {
+      "get": {
+        "responses": {},
+        "x-amazon-apigateway-integration": {
+          "httpMethod": "POST",
+          "uri": "arn:aws:apigateway:ap-northeast-3:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-3:471112772417:function:IotWebApiStack-SensorLambda2641F1B0-e9pLAAFmrIr1/invocations",
+          "passthroughBehavior": "when_no_match",
+          "type": "aws_proxy"
+        }
+      },
+      "post": {
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/SensorData"
+            }
+          }
+        ],
+        "responses": {},
+        "x-amazon-apigateway-integration": {
+          "httpMethod": "POST",
+          "uri": "arn:aws:apigateway:ap-northeast-3:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-3:471112772417:function:IotWebApiStack-SensorLambda2641F1B0-e9pLAAFmrIr1/invocations",
+          "passthroughBehavior": "when_no_match",
+          "type": "aws_proxy"
+        }
+      }
+    },
+    "/sensor-data/{id}": {
+      "get": {
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {},
+        "x-amazon-apigateway-integration": {
+          "httpMethod": "POST",
+          "uri": "arn:aws:apigateway:ap-northeast-3:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-3:471112772417:function:IotWebApiStack-SensorLambda2641F1B0-e9pLAAFmrIr1/invocations",
+          "passthroughBehavior": "when_no_match",
+          "type": "aws_proxy"
+        }
+      },
+      "put": {
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/SensorData"
+            }
+          }
+        ],
+        "responses": {},
+        "x-amazon-apigateway-integration": {
+          "httpMethod": "POST",
+          "uri": "arn:aws:apigateway:ap-northeast-3:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-3:471112772417:function:IotWebApiStack-SensorLambda2641F1B0-e9pLAAFmrIr1/invocations",
+          "passthroughBehavior": "when_no_match",
+          "type": "aws_proxy"
+        }
+      },
+      "delete": {
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {},
+        "x-amazon-apigateway-integration": {
+          "httpMethod": "POST",
+          "uri": "arn:aws:apigateway:ap-northeast-3:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-3:471112772417:function:IotWebApiStack-SensorLambda2641F1B0-e9pLAAFmrIr1/invocations",
+          "passthroughBehavior": "when_no_match",
+          "type": "aws_proxy"
+        }
+      }
+    },
+    "/users": {
+      "get": {
+        "responses": {},
+        "x-amazon-apigateway-integration": {
+          "httpMethod": "POST",
+          "uri": "arn:aws:apigateway:ap-northeast-3:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-3:471112772417:function:IotWebApiStack-UserLambdaAD4FB23B-EEabvdyP4f09/invocations",
+          "passthroughBehavior": "when_no_match",
+          "type": "aws_proxy"
+        }
+      },
+      "post": {
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UserData"
+            }
+          }
+        ],
+        "responses": {},
+        "x-amazon-apigateway-integration": {
+          "httpMethod": "POST",
+          "uri": "arn:aws:apigateway:ap-northeast-3:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-3:471112772417:function:IotWebApiStack-UserLambdaAD4FB23B-EEabvdyP4f09/invocations",
+          "passthroughBehavior": "when_no_match",
+          "type": "aws_proxy"
+        }
+      }
+    },
+    "/users/{id}": {
+      "get": {
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {},
+        "x-amazon-apigateway-integration": {
+          "httpMethod": "POST",
+          "uri": "arn:aws:apigateway:ap-northeast-3:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-3:471112772417:function:IotWebApiStack-UserLambdaAD4FB23B-EEabvdyP4f09/invocations",
+          "passthroughBehavior": "when_no_match",
+          "type": "aws_proxy"
+        }
+      },
+      "put": {
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UserData"
+            }
+          }
+        ],
+        "responses": {},
+        "x-amazon-apigateway-integration": {
+          "httpMethod": "POST",
+          "uri": "arn:aws:apigateway:ap-northeast-3:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-3:471112772417:function:IotWebApiStack-UserLambdaAD4FB23B-EEabvdyP4f09/invocations",
+          "passthroughBehavior": "when_no_match",
+          "type": "aws_proxy"
+        }
+      },
+      "delete": {
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {},
+        "x-amazon-apigateway-integration": {
+          "httpMethod": "POST",
+          "uri": "arn:aws:apigateway:ap-northeast-3:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-3:471112772417:function:IotWebApiStack-UserLambdaAD4FB23B-EEabvdyP4f09/invocations",
+          "passthroughBehavior": "when_no_match",
+          "type": "aws_proxy"
+        }
+      }
+    }
+  },
+  "definitions": {
+    "SensorData": {
+      "type": "object",
+      "properties": {
+        "sensorName": {
+          "type": "string"
+        },
+        "sensorValue": {
+          "type": "number",
+          "format": "float"
+        }
+      }
+    },
+    "UserData": {
+      "type": "object",
+      "properties": {
+        "username": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string",
+          "format": "password",
+          "minLength": 8,
+          "maxLength": 128
+        }
+      }
+    }
+  }
+}

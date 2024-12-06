@@ -8,6 +8,7 @@ import {
 import { unmarshall } from "@aws-sdk/util-dynamodb";
 import * as bcrypt from "bcryptjs";
 import { randomUUID } from "crypto";
+import { excludeSensitiveFields } from "../utils/common";
 import { response } from "../utils/response";
 import { isValidEmail } from "../utils/validate";
 
@@ -23,6 +24,9 @@ interface UserOutput {
   email: string;
 }
 
+// const dynamodb = new DynamoDB({
+//   endpoint: "http://dynamodb:8000",
+// }); // For local testing
 const dynamodb = new DynamoDB({});
 const TABLE_NAME = process.env.TABLE_NAME || "UserTable";
 
@@ -54,10 +58,12 @@ export const createUser = async (body: string | null) => {
     return response(400, "Invalid email");
   }
 
+  const id = randomUUID();
+
   const putCommand = new PutCommand({
     TableName: TABLE_NAME,
     Item: {
-      id: randomUUID(),
+      id,
       username,
       email,
       password: bcrypt.hashSync(password, 10),
@@ -66,7 +72,11 @@ export const createUser = async (body: string | null) => {
 
   try {
     await dynamodb.send(putCommand);
-    return response(200, "User created successfully");
+    
+    return response(200, {
+      message: "User created successfully",
+      data: { id, username, email },
+    });
   } catch (error) {
     console.error("Error creating user:", error);
     return response(500, "Error creating user");
@@ -126,17 +136,18 @@ export const updateUser = async (
     return response(400, "Invalid email");
   }
 
-  let updateExpression = "";
+  let updateExpression = "SET ";
   if (username) {
-    updateExpression += "SET username = :username";
+    updateExpression += "username = :username, ";
   }
   if (email) {
-    updateExpression += ", email = :email";
+    updateExpression += "email = :email, ";
   }
   if (password) {
-    updateExpression += ", password = :password";
+    updateExpression += "password = :password, ";
   }
 
+  updateExpression = updateExpression.slice(0, -2);
   const expressionAttributeValues: { [key: string]: any } = {};
   if (username) {
     expressionAttributeValues[":username"] = username;
@@ -153,11 +164,18 @@ export const updateUser = async (
     Key: { id },
     UpdateExpression: updateExpression,
     ExpressionAttributeValues: expressionAttributeValues,
+    ReturnValues: "ALL_NEW",
   });
 
   try {
-    await dynamodb.send(putCommand);
-    return response(200, "User updated successfully");
+    const result = await dynamodb.send(putCommand);
+    const attributes = result.Attributes
+      ? excludeSensitiveFields(result.Attributes, ["password"])
+      : {};
+    return response(200, {
+      message: "User updated successfully",
+      data: attributes,
+    });
   } catch (error) {
     console.error("Error updating user:", error);
     return response(500, "Error updating user");
@@ -177,7 +195,7 @@ export const deleteUser = async (id: string | undefined) => {
 
   try {
     await dynamodb.send(deleteCommand);
-    return response(200, "User deleted");
+    return response(200, "User deleted successfully");
   } catch (error) {
     console.error("Error deleting user:", error);
     return response(500, "Error deleting user");

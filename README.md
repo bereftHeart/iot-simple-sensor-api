@@ -2,12 +2,12 @@
 
 This is a simple AWS serverless CRUD API using nodejs.
 
-View live demo here: <http://iot-api-swagger-ui-bucket.s3-website.ap-northeast-3.amazonaws.com>
+View live demo [here](https://iot-api-swagger-ui-bucket.s3.ap-northeast-3.amazonaws.com/index.html)
 
 ## Prerequisite
 
-Already have an AWS account, install AWS CLI, AWS CDK CLI and configure AWS CLI. If not, following this instruction:
-<https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html>
+Already have an AWS account, install AWS CLI, AWS CDK CLI and configure AWS CLI. 
+If not, following this [instruction](https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html)
 
 ## How to deploy
 

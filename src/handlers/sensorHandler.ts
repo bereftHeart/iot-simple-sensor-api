@@ -17,8 +17,11 @@ interface SensorData {
   receiveAt?: string;
 }
 
+// const dynamodb = new DynamoDB({
+//   endpoint: "http://dynamodb:8000",
+// }); // For local testing
 const dynamodb = new DynamoDB({});
-const TABLE_NAME = process.env.TABLE_NAME || "SensorDataTable";
+const TABLE_NAME = process.env.TABLE_NAME || "SensorTable";
 
 /*
  * Utility function to parse the request body
@@ -43,11 +46,12 @@ export const createSensorData = async (body: string | null) => {
   if (!sensorName || !sensorValue) {
     return response(400, "Missing required fields");
   }
+  const id = randomUUID()
 
   const putCommand = new PutCommand({
     TableName: TABLE_NAME,
     Item: {
-      id: randomUUID(),
+      id,
       sensorName,
       sensorValue,
       timestamp: Date.now(),
@@ -56,7 +60,10 @@ export const createSensorData = async (body: string | null) => {
 
   try {
     await dynamodb.send(putCommand);
-    return response(200, "Sensor data created successfully");
+    return response(200, {
+      message: "Sensor data created successfully",
+      data: { id, sensorName, sensorValue },
+    });
   } catch (error) {
     console.log("Error creating sensor data:", error);
     return response(500, "Error creating sensor data");
@@ -90,10 +97,10 @@ export const getSensorData = async (id?: string) => {
   try {
     const { Items } = await dynamodb.send(scanCommand);
     if (!Items) return response(404, "No sensor data found");
-    const unmarshalledItems = Items?.map((item) => unmarshall(item));
+    const unMarShalledItems = Items?.map((item) => unmarshall(item));
     return response(
       200,
-      unmarshalledItems.map((item) => ({
+      unMarShalledItems.map((item) => ({
         ...excludeSensitiveFields(item, ["timestamp"]),
         receiveAt: item.timestamp
           ? new Date(item.timestamp).toISOString()
@@ -120,13 +127,15 @@ export const updateSensorData = async (
   if (!sensorData) return response(400, "Invalid or missing body");
 
   const { sensorName, sensorValue } = sensorData;
-  let updateExpression = "";
+  let updateExpression = "SET ";
   if (sensorName) {
-    updateExpression += "SET sensorName = :sensorName";
+    updateExpression += "sensorName = :sensorName, ";
   }
   if (sensorValue) {
-    updateExpression += ", sensorValue = :sensorValue";
+    updateExpression += "sensorValue = :sensorValue, ";
   }
+
+  updateExpression = updateExpression.slice(0, -2);
   const expressionAttributeValues: { [key: string]: any } = {};
   if (sensorName) {
     expressionAttributeValues[":sensorName"] = sensorName;
@@ -140,11 +149,15 @@ export const updateSensorData = async (
     Key: { id },
     UpdateExpression: updateExpression,
     ExpressionAttributeValues: expressionAttributeValues,
+    ReturnValues: "ALL_NEW",
   });
 
   try {
-    await dynamodb.send(putCommand);
-    return response(200, "Sensor data updated successfully");
+    const result = await dynamodb.send(putCommand);
+    return response(200, {
+      message: "Sensor data updated successfully",
+      data: result.Attributes,
+    });
   } catch (error) {
     console.log("Error updating sensor data:", error);
     return response(500, "Error updating sensor data");
