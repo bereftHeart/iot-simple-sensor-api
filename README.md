@@ -23,6 +23,15 @@ Install dependencies
 npm i
 ```
 
+Create the env file and configure your aws account id and region
+
+```sh
+cp .env.example .env
+```
+
+> CDK_DEFAULT_ACCOUNT = your-account-id \
+> CDK_DEFAULT_REGION = your-region
+
 Bootstrap your CDK
 
 ```sh
